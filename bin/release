@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# bin/release <build-dir>
+
+### Configure directories
+
+export BUILD_DIR=$1
+BP_DIR=$(cd $(dirname $0)/..; pwd)
+
+### Load dependencies
+
+# shellcheck source=util/common.sh
+source "$BP_DIR/bin/util/common.sh"
+
+### Export all env vars here
+echo "export ASPNETCORE_URLS='http://+:\$PORT'" >> "$BUILD_DIR/.profile.d/dotnetcore.sh"
+. $BUILD_DIR/.profile.d/dotnetcore.sh
+
+cat <<EOF
+---
+config_vars:
+EOF
+
+#if [[ $IS_POSTGRES_USED == "yes" ]]; then
+#cat <<EOF
+#addons:
+#  - heroku-postgresql:hobby-dev
+#EOF
+#fi
+
+if [[ ! -f $BUILD_DIR/Procfile ]]; then
+cat <<EOF
+default_process_types:
+EOF
+echo "  web: cd \$HOME/${APP_ASSEMBLY} && dotnet \"./${APP_ASSEMBLY}.dll\""
+fi
