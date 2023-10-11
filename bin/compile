@@ -120,10 +120,7 @@ cat << EOT >> ${BUILD_DIR}/Procfile
 web: cd \$HOME/$RELEASE_DIR && ASPNETCORE_URLS='http://+:\$PORT' dotnet "./$APP_ASSEMBLY.dll"
 EOT
 	
-else
-	# Get solution file from build directory
-	SOLUTION_FILE="$(get_project_sln_file $BUILD_DIR)"
-	
+else	
 	# Get solution name from build directory
 	SOLUTION_NAME="$(get_project_sln_name $BUILD_DIR)"
 	
@@ -132,7 +129,7 @@ else
 	
 	# https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish?tabs=netcore21
 	# dotnet publish [<PROJECT>]
-	dotnet publish $SOLUTION_FILE --output $BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64
+	dotnet publish $SOLUTION_FILE p:PublishDir=$BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64
 fi
 
 # Remove src files in production machine
