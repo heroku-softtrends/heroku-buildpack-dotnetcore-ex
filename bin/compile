@@ -103,6 +103,9 @@ echo "export DOTNET_CLI_TELEMETRY_OPTOUT=1" >> $PROFILE_PATH
 # Get solution file from build directory
 SOLUTION_FILE="$(get_project_sln_file $BUILD_DIR)"
 
+print "The nuget packages to be cleared"
+dotnet nuget locals all --clear
+
 if [[ ${#SOLUTION_FILE} -eq 0 ]]; then
 	# Get project file from build directory
 	PROJECT_FILE="$(get_project_file $BUILD_DIR)"
