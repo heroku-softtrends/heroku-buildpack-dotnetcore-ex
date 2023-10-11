@@ -69,7 +69,7 @@ while IFS='' read -r -d '' filename; do
 	print "The dotnet runtime version: ${runtime_framework_version} to be installed"
 
 	# dotnet installation
-	$BP_DIR/bin/util/dotnet-install.sh --channel $framework_version --quality preview --install-dir $BUILD_DIR/.dotnet
+	$BP_DIR/bin/util/dotnet-install.sh --channel $framework_version --install-dir $BUILD_DIR/.dotnet
 
 done < <(find $BUILD_DIR -maxdepth 2 -name "*.csproj" -print0)
 
