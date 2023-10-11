@@ -128,7 +128,7 @@ else
 	
 	# https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish?tabs=netcore21
 	# dotnet publish [<PROJECT>]
-	dotnet publish $SOLUTION_FILE --output $BUILD_DIR/$RELEASE_DIR --configuration Release --use-current-runtime --no-self-contained --no-build
+	dotnet publish $SOLUTION_FILE --output $BUILD_DIR/$RELEASE_DIR --configuration Release --use-current-runtime --no-self-contained
 fi
 
 # Remove src files in production machine
