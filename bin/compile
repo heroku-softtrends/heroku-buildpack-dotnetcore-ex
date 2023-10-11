@@ -44,6 +44,8 @@ elif [[ $herokuos_version == "19.04" ]]; then
 	apt_install libicu63 libssl1.1
 elif [[ $herokuos_version == "20.04" ]]; then
    	apt_install libicu66 libssl1.1
+elif [[ $herokuos_version == "22.04" ]]; then
+   	apt_install apt-transport-https libicu70 libssl3 libunwind8
 fi
 
 # Skip TELEMETRY_OPTOUT on production environment
