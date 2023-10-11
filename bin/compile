@@ -129,7 +129,7 @@ else
 	
 	# https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish?tabs=netcore21
 	# dotnet publish [<PROJECT>]
-	dotnet publish $SOLUTION_FILE p:PublishDir=$BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64
+	dotnet publish $SOLUTION_FILE -p:PublishDir=$BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64
 fi
 
 # Remove src files in production machine
