@@ -66,7 +66,6 @@ while IFS='' read -r -d '' filename; do
 
 	# Get dotnet runtime version
 	runtime_framework_version="$(get_specific_version $BUILD_DIR)"
-	runtime_framework_version=""
 	if [[ -z $runtime_framework_version ]]; then	
 		runtime_framework_version="$(get_runtime_framework_version $project_dir)"		
 	fi
