@@ -146,6 +146,17 @@ get_start_project_name() {
 
 # args:
 # input - $1
+get_specific_version() {
+	local sVersion=""
+	local productVersion=$(x=$(dirname $(find $1 -maxdepth 1 -type f | head -1)); while [[ "$x" =~ $1 ]] ; do find "$x" -maxdepth 3 -name productVersion.txt; x=`dirname "$x"`; done)
+	if [[ $productVersion ]]; then
+		sVersion=`cat $productVersion`
+	fi
+	echo $sVersion
+}
+
+# args:
+# input - $1
 get_framework_version() {
 	local target_framework=$(grep -oPm1 "(?<=<TargetFramework>)[^<]+" $1/*.csproj)
 	if [[ $target_framework =~ ";" ]]; then
