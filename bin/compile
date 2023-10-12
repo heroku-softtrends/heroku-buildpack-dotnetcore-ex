@@ -74,7 +74,7 @@ while IFS='' read -r -d '' filename; do
 	#runtime_framework_version="8.0.100-rc.1.23463.5"
 
 	# dotnet installation
-	$BP_DIR/bin/util/dotnet-install.sh --architecture x68 --channel $framework_version --install-dir $BUILD_DIR/.dotnet
+	$BP_DIR/bin/util/dotnet-install.sh --architecture x64 --channel $framework_version --install-dir $BUILD_DIR/.dotnet
 	
 	break
 
