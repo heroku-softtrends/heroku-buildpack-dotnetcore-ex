@@ -71,10 +71,10 @@ while IFS='' read -r -d '' filename; do
 	# Test version
 	#runtime_framework_version="8.0.100-preview.7.23376.3"
 	#runtime_framework_version="8.0.100-rc.2.23502.2"
-	runtime_framework_version="8.0.100-rc.1.23463.5"
+	#runtime_framework_version="8.0.100-rc.1.23463.5"
 
 	# dotnet installation
-	$BP_DIR/bin/util/dotnet-install.sh --channel $framework_version --version $runtime_framework_version --install-dir $BUILD_DIR/.dotnet
+	$BP_DIR/bin/util/dotnet-install.sh --channel $framework_version  --install-dir $BUILD_DIR/.dotnet
 	
 	break
 
