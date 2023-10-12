@@ -73,6 +73,8 @@ while IFS='' read -r -d '' filename; do
 
 	# dotnet installation
 	$BP_DIR/bin/util/dotnet-install.sh --channel $framework_version --version $runtime_framework_version --install-dir $BUILD_DIR/.dotnet
+	
+	break
 
 done < <(find $BUILD_DIR -maxdepth 2 -name "*.csproj" -print0)
 
@@ -106,9 +108,8 @@ echo "export DOTNET_CLI_TELEMETRY_OPTOUT=1" >> $PROFILE_PATH
 # Get solution file from build directory
 SOLUTION_FILE="$(get_project_sln_file $BUILD_DIR)"
 
-print "The nuget packages to be cleared"
-dotnet nuget locals all --clear
-
+#print "The nuget packages to be cleared"
+#dotnet nuget locals all --clear
 dotnet --list-runtimes
 
 if [[ ${#SOLUTION_FILE} -eq 0 ]]; then
@@ -117,32 +118,41 @@ if [[ ${#SOLUTION_FILE} -eq 0 ]]; then
 
 	# Get app assembly name from project file
 	APP_ASSEMBLY="$(get_project_name $BUILD_DIR)"
+	print "The assembly name: ${APP_ASSEMBLY}"
 	echo "export APP_ASSEMBLY=\"$(get_project_name $BUILD_DIR)\"" >> $PROFILE_PATH
 
-	cd $BUILD_DIR
 	RELEASE_DIR="${APP_ASSEMBLY}_Release"
-
+	echo "export RELEASE_DIR=\"${APP_ASSEMBLY}_Release\"" >> $PROFILE_PATH
+	cd $BUILD_DIR
+	
 	# https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish?tabs=netcore21
 	# dotnet publish [<PROJECT>]
-	dotnet publish $PROJECT_FILE --output $BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64
+	dotnet publish $PROJECT_FILE --output $BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64 --no-self-contained	
+else
+	# Get app assembly name from project file
+	APP_ASSEMBLY="$(get_start_project_name $BUILD_DIR)"
+	print "The assembly name: ${APP_ASSEMBLY}"
+	echo "export APP_ASSEMBLY=\"$(get_start_project_name $BUILD_DIR)\"" >> $PROFILE_PATH
 	
-# Create procfile and Add process type to that 
-cat << EOT >> ${BUILD_DIR}/Procfile
-web: cd \$HOME/$RELEASE_DIR && ASPNETCORE_URLS='http://+:\$PORT' dotnet "./$APP_ASSEMBLY.dll"
-EOT
-	
-else	
 	# Get solution name from build directory
 	SOLUTION_NAME="$(get_project_sln_name $BUILD_DIR)"
+	print "The solution name: ${SOLUTION_NAME}"
 	
-	cd $BUILD_DIR
 	RELEASE_DIR="${SOLUTION_NAME}_Release"
+	echo "export RELEASE_DIR=\"${SOLUTION_NAME}_Release\"" >> $PROFILE_PATH
+	cd $BUILD_DIR
 	
 	# https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish?tabs=netcore21
 	# dotnet publish [<Solution>]
-	print "The dotnet runtime version: ${SOLUTION_NAME} to be installed"
 	dotnet publish $SOLUTION_FILE --output $BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64 --no-self-contained
 fi
 
 # Remove src files in production machine
 find -maxdepth 1 ! -name Procfile ! -name .profile.d ! -name .apt ! -name .dotnet ! -name .heroku ! -name node_modules ! -name $RELEASE_DIR  -exec rm -rv {} \; > /dev/null 2>&1;
+
+if [[ ! -z "$APP_ASSEMBLY" ]]; then
+# Create procfile and Add process type to that 
+cat << EOT >> ${BUILD_DIR}/Procfile
+	web: cd \$HOME/$RELEASE_DIR && ASPNETCORE_URLS='http://+:\$PORT' dotnet "./$APP_ASSEMBLY.dll"
+EOT
+fi

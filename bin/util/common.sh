@@ -135,6 +135,17 @@ get_project_name() {
 
 # args:
 # input - $1
+get_start_project_name() {
+	local project_name=""
+	local launchSettingsFile=$(x=$(dirname $(find $1 -maxdepth 3 -type f | head -1)); while [[ "$x" =~ $1 ]] ; do find "$x" -maxdepth 1 -name launchSettings.json; x=`dirname "$x"`; done)
+	if [[ $launchSettingsFile ]]; then
+		project_name=$(basename $(dirname $(dirname ${launchSettingsFile%.*})))
+	fi
+	echo $projectfile
+}
+
+# args:
+# input - $1
 get_framework_version() {
 	local target_framework=$(grep -oPm1 "(?<=<TargetFramework>)[^<]+" $1/*.csproj)
 	if [[ $target_framework =~ ";" ]]; then
