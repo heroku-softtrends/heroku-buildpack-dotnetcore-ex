@@ -139,7 +139,7 @@ get_start_project_name() {
 	local project_name=""
 	local launchSettingsFile=$(x=$(dirname $(find $1 -maxdepth 1 -type f | head -1)); while [[ "$x" =~ $1 ]] ; do find "$x" -maxdepth 3 -name launchSettings.json; x=`dirname "$x"`; done)
 	if [[ $launchSettingsFile ]]; then
-		project_name=$(dirname $(dirname ${launchSettingsFile%.*}))
+		project_name=$(basename $(dirname $(dirname ${launchSettingsFile%.*})))
 	fi
 	echo $project_name
 }
