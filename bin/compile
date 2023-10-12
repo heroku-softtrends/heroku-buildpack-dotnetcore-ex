@@ -45,7 +45,7 @@ elif [[ $herokuos_version == "19.04" ]]; then
 elif [[ $herokuos_version == "20.04" ]]; then
    	apt_install libicu66 libssl1.1
 elif [[ $herokuos_version == "22.04" ]]; then
-   	apt_install apt-transport-https libicu70 libssl3 libunwind8
+   	apt_install apt-transport-https libicu70 libssl3 libunwind8 libgssapi-krb5-2 libc6 liblttng-ust1
 fi
 
 # Skip TELEMETRY_OPTOUT on production environment
@@ -74,7 +74,7 @@ while IFS='' read -r -d '' filename; do
 	#runtime_framework_version="8.0.100-rc.1.23463.5"
 
 	# dotnet installation
-	$BP_DIR/bin/util/dotnet-install.sh --architecture x64 --channel $framework_version --install-dir $BUILD_DIR/.dotnet
+	$BP_DIR/bin/util/dotnet-install.sh --architecture x64 --channel $framework_version --install-dir $BUILD_DIR/.dotnet --os ubuntu
 	
 	break
 
