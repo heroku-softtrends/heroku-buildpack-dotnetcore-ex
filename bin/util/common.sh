@@ -141,7 +141,7 @@ get_start_project_name() {
 	if [[ $launchSettingsFile ]]; then
 		project_name=$(basename $(dirname $(dirname ${launchSettingsFile%.*})))
 	fi
-	echo $projectfile
+	echo $project_name
 }
 
 # args:
