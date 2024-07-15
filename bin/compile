@@ -129,7 +129,7 @@ if [[ ${#SOLUTION_FILE} -eq 0 ]]; then
 	
 	# https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish?tabs=netcore21
 	# dotnet publish [<PROJECT>]
-	dotnet publish $PROJECT_FILE --output $BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64 --no-self-contained	
+	dotnet publish $PROJECT_FILE -p:PublishDir=$BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64 --no-self-contained	
 else
 	# Get app assembly name from project file
 	APP_ASSEMBLY="$(get_start_project_name $BUILD_DIR)"
@@ -146,7 +146,7 @@ else
 	
 	# https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish?tabs=netcore21
 	# dotnet publish [<Solution>]
-	dotnet publish $SOLUTION_FILE --output $BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64 --no-self-contained
+	dotnet publish $SOLUTION_FILE -p:PublishDir=$BUILD_DIR/$RELEASE_DIR --configuration Release --runtime linux-x64 --no-self-contained
 fi
 
 # Remove src files in production machine
