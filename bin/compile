@@ -46,6 +46,8 @@ elif [[ $herokuos_version == "20.04" ]]; then
    	apt_install libicu66 libssl1.1
 elif [[ $herokuos_version == "22.04" ]]; then
    	apt_install apt-transport-https libicu70 libssl3 libunwind8 libgssapi-krb5-2 libc6 liblttng-ust1
+elif [[ $herokuos_version == "24.04" ]]; then
+   	apt_install ca-certificates libc6 libgcc-s1 libicu74 liblttng-ust1 libssl3 libstdc++6 libunwind8 zlib1g
 fi
 
 # Skip TELEMETRY_OPTOUT on production environment
