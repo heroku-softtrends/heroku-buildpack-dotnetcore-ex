@@ -112,7 +112,8 @@ SOLUTION_FILE="$(get_project_sln_file $BUILD_DIR)"
 
 #print "The nuget packages to be cleared"
 #dotnet nuget locals all --clear
-dotnet --list-runtimes
+#dotnet --list-runtimes
+dotnet --info
 
 if [[ ${#SOLUTION_FILE} -eq 0 ]]; then
 	# Get project file from build directory
