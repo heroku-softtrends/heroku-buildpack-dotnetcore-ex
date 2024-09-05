@@ -84,7 +84,7 @@ done < <(find $BUILD_DIR -maxdepth 2 -name "*.csproj" -print0)
 if [[ $BUILD_DIR != '/app' ]]; then
 	# Subsequent buildpacks can still invoke it
 	if [[ ! -L "$HOME/.dotnet" ]]; then
-		ln -s ${BUILD_DIR}/.dotnet $HOME
+		#ln -s ${BUILD_DIR}/.dotnet $HOME
 	fi
 fi
 
@@ -113,9 +113,9 @@ echo "export DOTNET_CLI_TELEMETRY_OPTOUT=1" >> $PROFILE_PATH
 SOLUTION_FILE="$(get_project_sln_file $BUILD_DIR)"
 
 #print "The nuget packages to be cleared"
-#dotnet nuget locals all --clear
-#dotnet --list-runtimes
-dotnet --info
+dotnet nuget locals all --clear
+dotnet --list-runtimes
+#dotnet --info
 
 if [[ ${#SOLUTION_FILE} -eq 0 ]]; then
 	# Get project file from build directory
