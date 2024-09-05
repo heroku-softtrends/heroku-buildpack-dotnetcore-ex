@@ -967,7 +967,7 @@ copy_files_or_dirs_from_list() {
                 printf -- "--update=none";
             fi
         fi)
-
+    say "Copy override option: $override_switch."
     cat | uniq | while read -r file_path; do
         local path="$(remove_beginning_slash "${file_path#$root_path}")"
         local target="$out_path/$path"
