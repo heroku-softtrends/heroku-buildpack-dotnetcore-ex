@@ -1119,7 +1119,7 @@ download() {
     local out_path="${2:-}"
 
     if [[ "$remote_path" != "http"* ]]; then
-        cp "$remote_path" "$out_path"
+        cp "$remote_path" "$out_path" --update=none
         return $?
     fi
 
