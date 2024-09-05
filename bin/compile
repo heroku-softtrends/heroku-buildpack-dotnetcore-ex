@@ -84,6 +84,7 @@ done < <(find $BUILD_DIR -maxdepth 2 -name "*.csproj" -print0)
 if [[ $BUILD_DIR != '/app' ]]; then
 	# Subsequent buildpacks can still invoke it
 	if [[ ! -L "$HOME/.dotnet" ]]; then
+		print "${HOME}/.dotnet file exist"
 		#ln -s ${BUILD_DIR}/.dotnet $HOME
 	fi
 fi
