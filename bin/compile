@@ -74,7 +74,7 @@ while IFS='' read -r -d '' filename; do
 	print "The dotnet runtime version: ${runtime_framework_version} to be installed"
 
 	# dotnet installation
-	$BP_DIR/bin/util/dotnet-install.sh --architecture x64 --channel $framework_version --version $runtime_framework_version --install-dir $HOME/.dotnet
+	$BP_DIR/bin/util/dotnet-install.sh --architecture x64 --channel $framework_version --version $runtime_framework_version --install-dir $BUILD_DIR/.dotnet
 	
 	break
 
@@ -82,10 +82,8 @@ done < <(find $BUILD_DIR -maxdepth 2 -name "*.csproj" -print0)
 
 # Add symbolic link for dotnet
 if [[ $BUILD_DIR != '/app' ]]; then
-	# Subsequent buildpacks can still invoke it
 	if [[ ! -L "$HOME/.dotnet" ]]; then
-		print "${HOME}/.dotnet file exist"
-		#ln -s ${BUILD_DIR}/.dotnet $HOME
+		ln -s ${BUILD_DIR}/.dotnet $HOME
 	fi
 fi
 
