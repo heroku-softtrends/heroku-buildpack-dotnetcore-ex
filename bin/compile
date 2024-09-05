@@ -83,7 +83,9 @@ done < <(find $BUILD_DIR -maxdepth 2 -name "*.csproj" -print0)
 # Add symbolic link for dotnet
 if [[ $BUILD_DIR != '/app' ]]; then
 	# Subsequent buildpacks can still invoke it
-	ln -s ${BUILD_DIR}/.dotnet $HOME
+	if [[ ! -L "$HOME/.dotnet" ]]; then
+		ln -s ${BUILD_DIR}/.dotnet $HOME
+	fi
 fi
 
 # Add dotnet runtime path to environment variable that is available to access dotnet command
