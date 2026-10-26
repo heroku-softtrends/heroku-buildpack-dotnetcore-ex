@@ -1,0 +1,6 @@
+<Solution>
+  <!-- This is a minimal stub .slnx used only so that bin/util/common.sh's
+       get_project_sln_file/get_project_sln_name can locate and parse a
+       solution file name in tests. It is not a buildable solution. -->
+  <Project Path="WebApp/WebApp.csproj" />
+</Solution>

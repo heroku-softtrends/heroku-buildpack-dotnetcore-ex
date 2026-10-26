@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# bin/test <build-dir> <env-dir>
+#
+# Runs the app's .NET tests, as the second half of the Heroku Testpack API
+# pair with bin/test-compile (https://devcenter.heroku.com/articles/testpack-api).
+#
+# bin/compile resolves the test command during the bin/test-compile build,
+# while the .csproj/.sln files are still present, and records it to
+# $BUILD_DIR/.heroku/test_command. This script just reads that file and runs
+# it — no project discovery here.
+#
+# Heroku CI invokes this after bin/test-compile, with the app's .profile.d
+# scripts and ENV_DIR config vars already loaded into the environment; this
+# script re-applies both defensively so it also works when invoked by hand
+# or by tests/test.bats.
+
+### Configure environment
+
+set -o errexit    # always exit on error
+set -o pipefail   # don't ignore exit codes when piping output
+set -o nounset    # fail on unset variables
+
+### Configure directories
+
+BUILD_DIR="${1:?ERROR: Usage: bin/test <build-dir> <env-dir>}"
+ENV_DIR="${2:-}"
+BP_DIR=$(cd "$(dirname "${0:-}")" || exit 1; cd ..; pwd)
+
+### Load dependencies
+
+# shellcheck source=util/common.sh
+source "$BP_DIR/bin/util/common.sh"
+
+if [[ ! -d "$BUILD_DIR" ]]; then
+	error <<-EOF
+		Build directory not found: ${BUILD_DIR}
+	EOF
+fi
+
+export_env_dir "$ENV_DIR"
+
+# Heroku CI already loads .profile.d before invoking bin/test; source it
+# again defensively so dotnet/PATH/etc. are available when this is run by
+# hand or from the bats suite.
+PROFILE_FILE="$BUILD_DIR/.profile.d/dotnetcore.sh"
+if [[ -f "$PROFILE_FILE" ]]; then
+	# shellcheck source=/dev/null
+	source "$PROFILE_FILE"
+fi
+
+cd "$BUILD_DIR" || exit 1
+
+TEST_COMMAND_FILE="$BUILD_DIR/.heroku/test_command"
+if [[ ! -f "$TEST_COMMAND_FILE" ]]; then
+	error <<-EOF
+		No test command found at ${TEST_COMMAND_FILE}.
+
+		This file is written by bin/compile during a bin/test-compile build.
+		Either bin/test-compile wasn't run before bin/test, or it ran but
+		found no test project to run: add a test project referencing
+		Microsoft.NET.Test.Sdk (commonly named *.Tests.csproj), or use
+		app.json's 'scripts.test' to specify your own test command instead.
+	EOF
+fi
+
+test_command="$(cat "$TEST_COMMAND_FILE")"
+print "Running test command: ${test_command}"
+
+eval "$test_command"

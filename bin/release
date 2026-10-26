@@ -3,16 +3,32 @@
 
 ### Configure directories
 
-export BUILD_DIR=$1
-BP_DIR=$(cd $(dirname $0)/..; pwd)
+export BUILD_DIR="${1:?ERROR: Usage: bin/release <build-dir>}"
+BP_DIR=$(cd "$(dirname "$0")/.." || exit 1; pwd)
 
 ### Load dependencies
 
 # shellcheck source=util/common.sh
 source "$BP_DIR/bin/util/common.sh"
 
+if [[ ! -d "$BUILD_DIR" ]]; then
+	error <<-EOF
+		Build directory not found: ${BUILD_DIR}
+	EOF
+fi
+
+PROFILE_FILE="$BUILD_DIR/.profile.d/dotnetcore.sh"
+if [[ ! -f "$PROFILE_FILE" ]]; then
+	error <<-EOF
+		Runtime profile not found: ${PROFILE_FILE}
+
+		This usually means bin/compile did not complete successfully.
+	EOF
+fi
+
 ### Export all env vars here
-. $BUILD_DIR/.profile.d/dotnetcore.sh
+# shellcheck source=/dev/null
+source "$PROFILE_FILE"
 
 cat <<EOF
 ---
@@ -26,7 +42,7 @@ EOF
 #EOF
 #fi
 
-if [[ ! -f $BUILD_DIR/Procfile ]]; then
+if [[ ! -f "$BUILD_DIR/Procfile" ]]; then
 cat <<EOF
 default_process_types:
 EOF

@@ -1,29 +1,52 @@
 #!/usr/bin/env bash
 # bin/test-compile <build-dir> <cache-dir> <env-dir>
+#
+# Thin wrapper around bin/compile for CI/test harnesses that invoke
+# bin/test-compile directly: builds the app with
+# ASPNETCORE_ENVIRONMENT=Staging instead of bin/compile's production
+# default. (Note: ASPNETCORE_ENVIRONMENT only affects which
+# appsettings.{Environment}.json file ASP.NET Core loads at *runtime* — it
+# has no effect on `dotnet publish` itself. On a real Heroku app, use
+# `heroku config:set ASPNETCORE_ENVIRONMENT=...`, which Heroku injects into
+# the dyno directly; this wrapper exists only for local/CI dry runs of the
+# build step.)
 
 ### Configure environment
 
 set -o errexit    # always exit on error
 set -o pipefail   # don't ignore exit codes when piping output
+set -o nounset    # fail on unset variables
 
 ### Configure directories
 
-BP_DIR=$(cd "$(dirname "${0:-}")" || exit; cd ..; pwd)
+BUILD_DIR="${1:?ERROR: Usage: bin/test-compile <build-dir> <cache-dir> <env-dir>}"
+CACHE_DIR="${2:-}"
+ENV_DIR="${3:-}"
+BP_DIR=$(cd "$(dirname "${0:-}")" || exit 1; cd ..; pwd)
 
 ### Load dependencies
 
 # shellcheck source=util/common.sh
 source "$BP_DIR/bin/util/common.sh"
-# shellcheck source=util/apt_dpkg_install.sh
-source "$BP_DIR/bin/util/apt_dpkg_install.sh"
 
 print "Test starts"
 
-### Compile the app
-
-"$BP_DIR/bin/compile" "$1" "$2" "$3"
-
-### Set up test dotnet environment
-
+### Set up the test dotnet environment BEFORE compiling. bin/compile reads
+### ASPNETCORE_ENVIRONMENT from its own environment
+### (export ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-production}), so
+### these have to be exported here first, not after bin/compile has already
+### run to completion.
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export ASPNETCORE_ENVIRONMENT="Staging"
+
+### Tell bin/compile this is a test build, so it skips the
+### "productionization" step of deleting all source files after publish —
+### bin/test (run by Heroku CI right after this script) needs the
+### .csproj/.sln files still present to run `dotnet test`.
+export HEROKU_DOTNET_TEST_BUILD=1
+
+### Compile the app
+
+"$BP_DIR/bin/compile" "$BUILD_DIR" "$CACHE_DIR" "$ENV_DIR"
+
+print "Test complete"

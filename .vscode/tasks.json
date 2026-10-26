@@ -1,0 +1,23 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run buildpack tests",
+			"type": "shell",
+			// Uses Git for Windows' bash.exe (ships with Git Bash) instead of
+			// WSL. VS Code's "shell" task type runs this through whatever
+			// default shell is configured, but naming bash.exe explicitly
+			// here means it works even if the integrated terminal default is
+			// PowerShell or cmd.
+			"command": "${env:ProgramFiles}\\Git\\bin\\bash.exe",
+			"args": ["tests/run_tests.sh"],
+			"group": "test",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			},
+			"problemMatcher": []
+		}
+	]
+}

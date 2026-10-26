@@ -2,7 +2,7 @@
 
 ### Configure directories
 
-BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
+BP_DIR=$(cd "$(dirname "${0:-}")" || exit 1; cd ..; pwd)
 
 ### Load dependencies
 
@@ -10,78 +10,105 @@ BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 source "$BP_DIR/bin/util/common.sh"
 
 ### Declare local variables
-declare solution_name
+declare build_dir solution_name project_dir project_file file_based_app herokuos_version framework_version
 
-# Get project solution file name
-solution_name="$(get_project_sln_name $1)"
+build_dir="$1"
 
-if [[ ${#solution_name} -eq 0 ]]; then
-	### Declare local variables
-	declare project_name
+# Get project solution file name (.sln or .slnx)
+solution_name="$(get_project_sln_name "$build_dir")"
 
-	# Get project file name
-	project_name="$(get_project_name $1)"
-
-	if [[ -f "$1/$project_name.csproj" && -f "$1/Program.cs" ]]; then
-		declare herokuos_version framework_version
-	
-		# Get OS version
-		herokuos_version=$(get_linux_platform_version)
-		
-		# Get application framework verson
-		framework_version=$(get_framework_version $1)
-		
-		if  [[ $(awk 'BEGIN {print ("'$herokuos_version'" >= "'16.04'")}') -eq 1 ]] && [[ $(awk 'BEGIN {print ("'$framework_version'" >= "'2.1'")}') -eq 1 ]]; then
-			echo "ASP.NET Core" && exit 0
-		else
-			if [[ $(awk 'BEGIN {print ("'$herokuos_version'" < "'16.04'")}') -eq 1 ]]; then
-				error <<-EOF
-					Ubuntu $herokuos_version is not supported by .NET Core $framework_version.
-
-					Supported OS versions:
-					Ubuntu(19.04, 18.04, 16.04)
-
-					For more information, refer to the following documentation:
-					https://github.com/dotnet/core/blob/master/release-notes/$framework_version/$framework_version-supported-os.md
-				EOF
-			else
-				error <<-EOF
-					The .NET Core framework version $framework_version is not supported by this buildpack!
-
-					This buildpack supports .NET Core framework version from 2.1 and higher.
-				EOF
-			fi
-		fi
-	else
-		if [[ ${#project_name} -eq 0 ]]; then
-			project_name="*"
-		fi
+if [[ -n $solution_name ]]; then
+	# Solution-based app: resolve a project within it so the target
+	# framework and OS checks below run the same way as for a
+	# single-project app, instead of accepting any solution unconditionally.
+	project_dir="$(get_first_csproj_dir "$build_dir")"
+	if [[ -z $project_dir ]]; then
 		error <<-EOF
 			Application not supported by this buildpack!
 
-			The ASP.NET Core buildpack is set on this application, but was unable to detect
-			an ASP.NET Core codebase.
-
-			An ASP.NET Core app requires ${PROJECT_NAME}.csproj, Startup.cs and Program.cs
-			files at the root of the directory structure.
-
-			If you are trying to deploy an ASP.NET Core application, ensure that
-			these files (${project_name}.csproj, Startup.cs and Program.cs) are present at
-			the top level directory. 
-
-			This directory has the following files:
-			$(ls -1p "$1")
-
-			If you are trying to deploy an application written in another language, you need
-			to change the list of buildpacks set on your Heroku app using the 'heroku buildpacks'
-			command.
+			The ASP.NET Core buildpack is set on this application, and a
+			solution file ('${solution_name}') was found, but it does not reference a usable project (.csproj, .fsproj or .vbproj)
+			within one subdirectory of the build directory.
 
 			For more information, refer to the following documentation:
 			https://devcenter.heroku.com/articles/buildpacks
-			https://devcenter.heroku.com/articles/php-support#activation
 		EOF
 	fi
 else
-	echo "ASP.NET Core" && exit 0
+	# Get project file (.csproj, .fsproj or .vbproj) at the build dir root
+	project_file="$(get_project_file "$build_dir")"
+	if [[ -n $project_file && "$(dirname "$project_file")" == "$build_dir" ]]; then
+		project_dir="$build_dir"
+	fi
 fi
-exit 1
+
+# No solution and no root-level project file: check for a file-based app (a
+# bare .cs file with no project at all, e.g. `dotnet run app.cs`).
+if [[ -z $project_dir ]]; then
+	file_based_app="$(get_file_based_app_file "$build_dir")"
+fi
+
+if [[ -z $project_dir && -z $file_based_app ]]; then
+	error <<-EOF
+		Application not supported by this buildpack!
+
+		The ASP.NET Core buildpack is set on this application, but was unable to detect
+		a .NET solution, project or file-based app.
+
+		A .NET app on Heroku must have a solution ('.sln' or '.slnx'), project
+		('.csproj', '.fsproj' or '.vbproj') or C# ('.cs') file in the root
+		directory of its source code.
+
+		This directory has the following files:
+		$(ls -1p "$build_dir")
+
+		If you are trying to deploy an application written in another language, you need
+		to change the list of buildpacks set on your Heroku app using the 'heroku buildpacks'
+		command.
+
+		For more information, refer to the following documentation:
+		https://devcenter.heroku.com/articles/buildpacks
+	EOF
+fi
+
+# Get OS version
+herokuos_version=$(get_linux_platform_version)
+
+# Get application framework version
+if [[ -n $project_dir ]]; then
+	framework_version=$(get_framework_version "$project_dir")
+	if [[ -z $framework_version ]]; then
+		error <<-EOF
+			Unable to determine the target framework for the project at
+			${project_dir}. Ensure its project file declares a <TargetFramework>.
+		EOF
+	fi
+else
+	# File-based apps have no project file to read a <TargetFramework>
+	# from. There's nothing to validate here beyond the OS-version check
+	# below; bin/compile installs the SDK's default channel (or whatever
+	# global.json pins) for these apps.
+	framework_version="2.1"
+fi
+
+if is_supported_heroku_os_version "$herokuos_version" && [[ "$(is_version_gte "$framework_version" "2.1")" -eq 1 ]]; then
+	echo "ASP.NET Core" && exit 0
+else
+	if ! is_supported_heroku_os_version "$herokuos_version"; then
+		error <<-EOF
+			Ubuntu $herokuos_version is not supported by .NET Core $framework_version.
+
+			Supported OS versions:
+			Ubuntu(16.04, 18.04, 20.04, 22.04, 24.04, 26.04)
+
+			For more information, refer to the following documentation:
+			https://github.com/dotnet/core/blob/master/release-notes/$framework_version/$framework_version-supported-os.md
+		EOF
+	else
+		error <<-EOF
+			The .NET Core framework version $framework_version is not supported by this buildpack!
+
+			This buildpack supports .NET Core framework version from 2.1 and higher.
+		EOF
+	fi
+fi

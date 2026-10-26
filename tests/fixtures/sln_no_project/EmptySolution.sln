@@ -1,0 +1,4 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# This .sln intentionally references no project, to exercise the
+# "solution with no usable startup project" path of bin/detect and
+# bin/compile's project-discovery validation.
