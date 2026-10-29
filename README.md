@@ -7,7 +7,7 @@ A custom [Heroku buildpack](https://devcenter.heroku.com/articles/buildpacks) th
 detects, compiles, and deploys .NET Core / ASP.NET Core applications
 (including ASP.NET Core MVC apps) to Heroku. It downloads the matching .NET
 SDK/runtime from Microsoft, publishes your app with `dotnet publish`, and wires
-up a `Procfile` so `git push heroku main` just works.
+up a `Procfile` so `git push heroku master` just works.
 
 Any editor works — Visual Studio Code up through the fully-featured Visual
 Studio — but Visual Studio 2019 or later is recommended for best
@@ -19,7 +19,7 @@ Add this buildpack to your Heroku app, then deploy as usual:
 
 ```bash
 heroku buildpacks:add https://github.com/<org>/heroku-buildpack-dotnetcore-ex
-git push heroku main
+git push heroku master
 ```
 
 The buildpack supports any of the following at the root of your repo:
@@ -51,6 +51,35 @@ current status of your app's stack.
 Any other Ubuntu version (i.e. any stack not listed above) fails the build
 immediately with an explicit "Unsupported Ubuntu version" error, rather than
 silently skipping prerequisite package installation.
+
+## .NET version support
+
+This buildpack's `bin/detect` only rejects a project whose
+`<TargetFramework>` resolves below `2.1` — it does **not** check whether a
+version is still supported by Microsoft. That's a separate, independent
+concern: you can deploy an out-of-support `<TargetFramework>` and the build
+will still succeed, but the app runs on an SDK/runtime that no longer
+receives security patches. Current status, per
+[Microsoft's .NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core)
+(checked October 2026):
+
+| Version        | Release type | End of support     | Status           |
+|-----------------|---------------|----------------------|-------------------|
+| .NET 10         | LTS           | November 14, 2028   | In support        |
+| .NET 9          | STS           | November 10, 2026   | **Maintenance — ends in days** |
+| .NET 8          | LTS           | November 10, 2026   | **Maintenance — ends in days** |
+| .NET 7          | STS           | May 14, 2024        | Out of support    |
+| .NET 6          | LTS           | November 12, 2024   | Out of support    |
+| .NET 5          | STS           | May 10, 2022        | Out of support    |
+| .NET Core 3.1   | LTS           | December 13, 2022   | Out of support    |
+
+"Maintenance" means the final 6 months of a release's support window:
+security-only fixes, no new features. **.NET 8 and .NET 9 both leave support
+on November 10, 2026** — if your `<TargetFramework>` targets either, plan a
+move to .NET 10 (LTS, supported through November 2028) soon. Within an
+in-support major version, always build against its latest patch (e.g.
+10.0.14 as of this check) — this buildpack's `"Latest"` SDK fallback (see
+below) already does this for you when no exact version is pinned.
 
 ## Configuring the .NET SDK version
 
@@ -210,3 +239,4 @@ bats tests/*.bats
 - Visual Studio — [Learn and download](https://www.visualstudio.com/)
 - Heroku Buildpacks — [How to use](https://devcenter.heroku.com/articles/buildpacks#setting-a-buildpack-on-an-application)
 - Heroku Stack — [Current stack support and lifecycle](https://devcenter.heroku.com/articles/stack)
+- .NET Support Policy — [Microsoft's lifecycle page](https://dotnet.microsoft.com/platform/support/policy/dotnet-core)
